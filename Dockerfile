@@ -2,7 +2,7 @@ FROM alpine:latest AS build
 
 ENV XMRIG_VERSION="6.6.1"
 
-WORKDIR /mine
+WORKDIR /build
 
 RUN apk --no-cache upgrade && \
     apk add --no-cache wget && \
@@ -12,18 +12,11 @@ RUN apk --no-cache upgrade && \
 
 FROM alpine:latest
 
-RUN adduser --disabled-password miner && \
-    mkdir -p /mine && \
-    chown -R miner:miner /mine
-
-VOLUME /config
+VOLUME /mine/config.json
 
 WORKDIR /mine
 
-USER miner
+COPY --from=build /build/xmrig ./xmrig
 
-COPY --chown=miner:miner --from=build /mine/xmrig ./xmrig
+ENTRYPOINT ./xmrig -c /mine/config.json
 
-ENTRYPOINT "./xmrig" 
-
-CMD ["-c /config/*.json"]
